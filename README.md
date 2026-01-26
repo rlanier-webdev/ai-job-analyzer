@@ -29,8 +29,8 @@ An AI-powered web application that analyzes job postings against your profession
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/job-analyzer.git
-   cd job-analyzer
+   git clone https://github.com/rlanier-webdev/ai-job-analyzer.git
+   cd ai-job-analyzer
    ```
 
 2. Create and activate a virtual environment:
