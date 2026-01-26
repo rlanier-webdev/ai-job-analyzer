@@ -15,10 +15,10 @@ An AI-powered web application that analyzes job postings against your profession
 
 ## Tech Stack
 
-**Backend**: FastAPI, Uvicorn, Pydantic
-**AI**: OpenAI GPT-4o
-**Frontend**: HTML5, CSS3, Vanilla JavaScript
-**Data Processing**: BeautifulSoup4, pypdf
+- **Backend**: FastAPI, Uvicorn, Pydantic
+- **AI**: OpenAI GPT-4o
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Data Processing**: BeautifulSoup4, pypdf
 
 ## Prerequisites
 
