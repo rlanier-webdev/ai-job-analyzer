@@ -1,0 +1,57 @@
+{
+  "name": "Jane Smith",
+  "title": "Senior Software Engineer",
+  "years_experience": 6,
+  "skills": [
+    "Python",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "PostgreSQL",
+    "AWS",
+    "Docker",
+    "Kubernetes",
+    "GraphQL",
+    "REST APIs",
+    "CI/CD",
+    "Agile/Scrum"
+  ],
+  "education": [
+    "BS Computer Science, University of Washington, 2018",
+    "AWS Solutions Architect Certification"
+  ],
+  "work_history": [
+    {
+      "title": "Senior Software Engineer",
+      "company": "TechCorp",
+      "duration": "2022-present",
+      "description": "Lead backend development for payment processing system serving 10M users. Reduced API latency by 40% through optimization. Mentored 3 junior engineers."
+    },
+    {
+      "title": "Software Engineer",
+      "company": "StartupXYZ",
+      "duration": "2019-2022",
+      "description": "Full-stack development on React/Node.js platform. Built real-time collaboration features. Implemented CI/CD pipeline reducing deployment time by 60%."
+    },
+    {
+      "title": "Junior Developer",
+      "company": "WebAgency",
+      "duration": "2018-2019",
+      "description": "Developed client websites and web applications. Learned React and modern JavaScript ecosystem."
+    }
+  ],
+  "preferred_locations": [
+    "Seattle, WA",
+    "San Francisco, CA",
+    "Remote"
+  ],
+  "remote_preference": "flexible",
+  "min_salary": 150000,
+  "max_commute_minutes": 45,
+  "industries": [
+    "Technology",
+    "Fintech",
+    "Healthcare Tech"
+  ],
+  "summary": "Experienced full-stack engineer with strong backend focus. Passionate about building scalable systems and mentoring others. Looking for senior or staff-level roles at innovative companies."
+}

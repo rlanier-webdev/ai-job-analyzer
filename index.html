@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Analyzer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://kit.fontawesome.com/3b1ab49e86.js" crossorigin="anonymous"></script></head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Job Analyzer</h1>
+            <p class="subtitle">AI-powered job posting analysis</p>
+        </header>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Your Profile</h2>
+                <span id="profileStatus" class="profile-status">Not loaded</span>
+            </div>
+            <div class="actions" style="margin-top: 0;">
+                <button class="btn btn-secondary" onclick="openProfileModal()"><i class="fa-solid fa-pencil"></i> Edit Manually</button>
+                
+                <button class="btn btn-secondary" onclick="document.getElementById('resumeAutoFill').click()" style="border: 1px solid #4361ee; color: #4361ee;">
+                    <i class="fa-solid fa-file-pdf"></i> Auto-fill from Resume (PDF)
+                </button>
+                <input type="file" id="resumeAutoFill" style="display:none" accept=".pdf" onchange="handleResumeUpload(event)">
+            </div>
+            <p style="font-size: 0.8rem; color: #666; margin-top: 0.8rem;">
+                Tip: Upload your resume once and it will automatically extract your skills, history, and education.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>Job Posting</h2>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('paste')"><i class="fa-solid fa-paste"></i> Paste Text</button>
+                <button class="tab" onclick="switchTab('upload')"><i class="fa-solid fa-upload"></i> Upload PDF</button>
+                <button class="tab" onclick="switchTab('url')"><i class="fa-solid fa-link"></i> Enter URL</button>
+            </div>
+
+            <div id="tab-paste" class="tab-content active">
+                <textarea id="jobText" placeholder="Paste the job description here..."></textarea>
+            </div>
+
+            <div id="tab-upload" class="tab-content">
+                <div class="file-upload" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept=".pdf" onchange="handleFileSelect(event)">
+                    <p>Drop PDF here or click to upload</p>
+                    <p class="filename" id="fileName"></p>
+                </div>
+            </div>
+
+            <div id="tab-url" class="tab-content">
+                <input type="url" class="url-input" id="jobUrl" placeholder="https://linkedin.com/jobs/view/...">
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">Analyze Job</button>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>Analyzing...</span>
+                </div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="card">
+                <h2 id="resultTitle">Job Analysis</h2>
+
+                <div class="section">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <span class="score-badge" id="scoreBadge">85/100</span>
+                        <span class="verdict" id="applyVerdict">APPLY</span>
+                    </div>
+                    <p style="margin-top: 0.5rem; color: #666;" id="qualSummary"></p>
+                </div>
+
+                <div class="section">
+                    <h3>Skills Match</h3>
+                    <div class="skills-grid">
+                        <div class="skill-list matching">
+                            <h4>Matching Skills</h4>
+                            <ul id="matchingSkills"></ul>
+                        </div>
+                        <div class="skill-list missing">
+                            <h4>Missing Skills</h4>
+                            <ul id="missingSkills"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Why You Should / Shouldn't Apply</h3>
+                    <p id="applyReasoning"></p>
+                </div>
+
+                <div class="section">
+                    <h3>Salary Analysis</h3>
+                    <p id="salaryAssessment"></p>
+                    <p style="margin-top: 0.5rem;"><strong>Recommendation:</strong> <span id="salaryRec"></span></p>
+                </div>
+
+                <div class="section">
+                    <h3>Flags</h3>
+                    <div class="flags">
+                        <div class="flag-group green">
+                            <h4>Green Flags</h4>
+                            <ul id="greenFlags"></ul>
+                        </div>
+                        <div class="flag-group red">
+                            <h4>Red Flags</h4>
+                            <ul id="redFlags"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Interview Tips</h3>
+                    <ul class="tips-list" id="interviewTips"></ul>
+                </div>
+
+                <div class="section">
+                    <h3>Overall Recommendation</h3>
+                    <div class="recommendation-box" id="overallRec"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal">
+            <h2>Edit Your Profile</h2>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="pName" required>
+                </div>
+                <div class="form-group">
+                    <label>Current/Target Job Title</label>
+                    <input type="text" id="pTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Years of Experience</label>
+                    <input type="number" id="pYears" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Skills</label>
+                    <textarea id="pSkills" rows="3" placeholder="Python, JavaScript, React, AWS..."></textarea>
+                    <small>Comma-separated list of your skills</small>
+                </div>
+                <div class="form-group">
+                    <label>Education</label>
+                    <textarea id="pEducation" rows="2" placeholder="BS Computer Science, MIT"></textarea>
+                    <small>Comma-separated list</small>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Locations</label>
+                    <input type="text" id="pLocations" placeholder="New York, Remote, San Francisco">
+                    <small>Comma-separated, or leave blank for any</small>
+                </div>
+                <div class="form-group">
+                    <label>Remote Preference</label>
+                    <select id="pRemote">
+                        <option value="flexible">Flexible</option>
+                        <option value="remote">Remote Only</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="onsite">On-site</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Minimum Salary</label>
+                    <input type="number" id="pSalary" placeholder="100000">
+                </div>
+                <div class="form-group">
+                    <label>Summary</label>
+                    <textarea id="pSummary" rows="3" placeholder="Brief description of your background and goals..."></textarea>
+                </div>
+                <div class="work-history-section">
+                    <h3>
+                        Work History
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addWorkEntry()"><i class="fas fa-plus"></i> Add Job</button>
+                    </h3>
+                    <div id="workHistoryEntries"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/scripts.js"></script>
+</body>
+</html>

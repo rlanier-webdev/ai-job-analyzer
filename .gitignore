@@ -1,0 +1,25 @@
+# Environment
+.env
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# User data
+profile.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+*.old
+profile copy.json
+.github/copilot-instructions.md
