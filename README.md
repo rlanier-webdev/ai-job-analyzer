@@ -108,6 +108,9 @@ job-analyzer/
 - **Profile Storage**: Your profile is saved to `profile.json` and automatically loaded on startup
 - **Server**: Runs on `127.0.0.1:8000` (localhost only)
 
+## Screenshots
+<img width="945" height="811" alt="image" src="https://github.com/user-attachments/assets/7dc1bb3f-654c-4a86-98cd-56f98a237c26" />
+
 ## License
 
 MIT
