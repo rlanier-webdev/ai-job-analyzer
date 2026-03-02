@@ -16,14 +16,14 @@ An AI-powered web application that analyzes job postings against your profession
 ## Tech Stack
 
 - **Backend**: FastAPI, Uvicorn, Pydantic
-- **AI**: OpenAI GPT-4o
+- **AI**: Claude
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Data Processing**: BeautifulSoup4, pypdf
 
 ## Prerequisites
 
 - Python 3.7+
-- OpenAI API key
+- Claude API key
 
 ## Installation
 
@@ -49,9 +49,9 @@ An AI-powered web application that analyzes job postings against your profession
    cp .env.example .env
    ```
 
-5. Add your OpenAI API key to `.env`:
+5. Add your Claude API key to `.env`:
    ```
-   OPENAI_API_KEY=your-api-key-here
+   ANTHROPIC_API_KEY=your-api-key-here
    ```
 
 ## Usage

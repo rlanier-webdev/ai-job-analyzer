@@ -1,12 +1,13 @@
 import io
 import os
+import re
 import json
 import requests
+import anthropic # type: ignore
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 from pypdf import PdfReader
-from openai import OpenAI
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 
@@ -50,7 +51,7 @@ class JobPosting(BaseModel):
         {chr(10).join(f'- {benefit}' for benefit in self.benefits)}"""
 
 class JobParser:
-    """Parse job postings using OpenAI GPT-4."""
+    """Parse job postings using Claude."""
 
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36..."
@@ -66,8 +67,8 @@ class JobParser:
     ]
 
     def __init__(self, api_key: str | None = None):
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-        self.model_id = "gpt-4o"
+        self.client = anthropic.Anthropic(api_key=api_key or os.getenv("ANTHROPIC_API_KEY"))
+        self.model_id = "claude-sonnet-4-6"
 
     async def parse(self, source: str) -> JobPosting:
         if self._is_url(source):
@@ -137,7 +138,7 @@ class JobParser:
         return self._llm_extract(text)
 
     def _llm_extract(self, raw_content: str) -> JobPosting:
-        """Uses OpenAI GPT-4 to transform messy text into a structured JobPosting object."""
+        """Uses Claude to transform messy text into a structured JobPosting object."""
 
         # Debug: see the first 500 characters being sent
         print("=" * 50)
@@ -173,16 +174,17 @@ class JobParser:
         """
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model_id,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                response_format={"type": "json_object"}
+                max_tokens=2048,
+                temperature=0.1
             )
             
-            data = json.loads(response.choices[0].message.content)
+            text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response.content[0].text.strip())
+            data = json.loads(text)
 
-            # Debug: see what GPT-4 extracted
+            # Debug: see what Claude extracted
             print("EXTRACTED DATA:")
             print(f"Company: {data.get('company')}")
             print(f"Title: {data.get('title')}")
@@ -192,5 +194,5 @@ class JobParser:
             return JobPosting(**data)
             
         except Exception as e:
-            print(f"❌ OpenAI Extraction Error: {e}")
+            print(f"❌ Claude Extraction Error: {e}")
             raise
