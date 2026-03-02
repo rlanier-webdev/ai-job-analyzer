@@ -1,8 +1,9 @@
 import os
+import re
 import json
+import anthropic
 from pathlib import Path
 from pydantic import BaseModel
-from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -24,26 +25,26 @@ class Profile(BaseModel):
     summary: str = ""
 
     def to_prompt_context(self) -> str:
-        """Convert profile to a clean JSON string for OpenAI."""
+        """Convert profile to a clean JSON string for Claude."""
         return self.model_dump_json(indent=2, exclude_none=True)
 
 
 class ProfileManager:
-    """Handles loading, saving, and auto-generating profiles using OpenAI GPT-4."""
+    """Handles loading, saving, and auto-generating profiles using Claude."""
     
     def __init__(self, api_key: str | None = None):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        
+        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+
         if not self.api_key:
-            print("⚠️ Warning: No OpenAI API Key found. Profile generation will fail.")
-        
-        self.client = OpenAI(api_key=self.api_key)
-        self.model_id = "gpt-4o"
+            print("⚠️ Warning: No Anthropic API Key found. Profile generation will fail.")
+
+        self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.model_id = "claude-sonnet-4-6"
 
     def create_profile_from_resume(self, resume_text: str) -> Profile:
-        """Use OpenAI GPT-4 to parse a raw resume and turn it into a Profile object."""
+        """Use Claude to parse a raw resume and turn it into a Profile object."""
         if not self.api_key:
-            raise ValueError("API Key is missing. Please add OPENAI_API_KEY to your .env file.")
+            raise ValueError("API Key is missing. Please add ANTHROPIC_API_KEY to your .env file.")
 
         prompt = f"""
         Extract information from this resume into a structured JSON format. 
@@ -67,14 +68,15 @@ class ProfileManager:
         """
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model_id,
+                max_tokens=2048,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                response_format={"type": "json_object"}
+                temperature=0.1
             )
-            
-            data = json.loads(response.choices[0].message.content)
+
+            text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response.content[0].text.strip())
+            data = json.loads(text)
             
             # Add default preferences that aren't usually in a resume
             data.setdefault("preferred_locations", [])
@@ -82,7 +84,7 @@ class ProfileManager:
             
             return Profile(**data)
         except Exception as e:
-            print(f"❌ Error parsing resume with OpenAI: {e}")
+            print(f"❌ Error parsing resume with Claude: {e}")
             raise
 
 def load_profile(path: str | Path) -> Profile:

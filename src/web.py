@@ -23,8 +23,8 @@ async def lifespan(app: FastAPI):
     Checks for API keys and loads the local profile if it exists.
     """
     # Startup Logic
-    if not os.getenv("OPENAI_API_KEY"):
-        print("❌ ERROR: OPENAI_API_KEY is missing from .env!")
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        print("❌ ERROR: ANTHROPIC_API_KEY is missing from .env!")
     
     if PROFILE_PATH.exists():
         try:
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Job Analyzer", 
-    description="Intelligent job matching with OpenAI",
+    description="Intelligent job matching with Claude",
     lifespan=lifespan
 )
 

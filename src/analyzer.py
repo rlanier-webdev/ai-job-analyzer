@@ -1,7 +1,8 @@
 import os
+import re
 import json
+import anthropic
 from dataclasses import dataclass, asdict
-from openai import OpenAI
 from dotenv import load_dotenv
 
 from .parser import JobPosting
@@ -29,24 +30,25 @@ class JobAnalysis:
         return asdict(self)
 
 class JobAnalyzer:
-    """Analyze job postings using OpenAI GPT-4."""
+    """Analyze job postings using Claude."""
 
     def __init__(self, api_key: str | None = None):
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-        self.model_id = "gpt-4o"
+        self.client = anthropic.Anthropic(api_key=api_key or os.getenv("ANTHROPIC_API_KEY"))
+        self.model_id = "claude-sonnet-4-6"
 
     def analyze(self, job: JobPosting, profile: Profile) -> JobAnalysis:
         prompt = self._build_analysis_prompt(job, profile)
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model_id,
+                max_tokens=2048,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.2,
-                response_format={"type": "json_object"}
+                temperature=0.2
             )
-            
-            data = json.loads(response.choices[0].message.content)
+
+            text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response.content[0].text.strip())
+            data = json.loads(text)
             analysis = JobAnalysis(**data)
 
             # Check if missing too many skills
@@ -55,7 +57,7 @@ class JobAnalyzer:
             return analysis
             
         except Exception as e:
-            print(f"❌ OpenAI Analysis Error: {e}")
+            print(f"❌ Claude Analysis Error: {e}")
             return self._get_empty_analysis(str(e))
 
     def _apply_skill_threshold(self, analysis: JobAnalysis) -> JobAnalysis:

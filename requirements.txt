@@ -1,17 +1,18 @@
 # Core AI & Logic
-openai>=1.0.0            # OpenAI API for Copilot-style AI
-pydantic>=2.12.0         # Latest Pydantic V2 for better performance
-python-dotenv>=1.2.0     # Modern .env handling
+anthropic>=0.84.0     # Claude API for Copilot-style AI
+pydantic>=2.12.5         # Latest Pydantic V2 for better performance
+python-dotenv>=1.2.2     # Modern .env handling
 
 # Web & API
-fastapi>=0.128.0         # Modern FastAPI with lifespan support
-uvicorn>=0.30.0          # Stable ASGI server
-python-multipart>=0.0.20 # Required for file/form handling in FastAPI
+fastapi>=0.135.1        # Modern FastAPI with lifespan support
+uvicorn>=0.41.0          # Stable ASGI server
+python-multipart>=0.0.22 # Required for file/form handling in FastAPI
 
 # Extraction & Scraping
-beautifulsoup4>=4.12.0   # Standard for HTML parsing
+beautifulsoup4>=4.14.3   # Standard for HTML parsing
 requests>=2.32.0         # Standard for sync URL fetching
-pypdf>=6.6.0             # significantly faster PDF parsing (replaces older 4.x)
+pypdf>=6.7.5            # significantly faster PDF parsing (replaces older 4.x)
+playwright>=1.58.0
 
 # Optional but Recommended
-httpx>=0.28.0            # If you plan to use async URL fetching
+httpx>=0.28.1            # If you plan to use async URL fetching
