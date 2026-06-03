@@ -33,7 +33,14 @@ class JobSearcher:
         return [r for r in results if self._is_usa_eligible(r.location)]
 
     def build_query(self, profile: Profile) -> str:
-        return profile.title
+        title = profile.title or ""
+        stopwords = {
+            "senior", "sr", "junior", "jr", "lead", "principal", "staff",
+            "associate", "entry", "mid", "level", "i", "ii", "iii", "iv",
+            "manager", "director", "head", "chief", "vp",
+        }
+        words = [w for w in title.lower().split() if w not in stopwords]
+        return " ".join(words[:3]) if words else title
 
     def _is_usa_eligible(self, location: str) -> bool:
         loc = location.lower().strip()

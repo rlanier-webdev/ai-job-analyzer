@@ -8,40 +8,160 @@
     <script defer src="https://kit.fontawesome.com/3b1ab49e86.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Job Analyzer</h1>
-            <p class="subtitle">AI-powered job posting analysis</p>
-        </header>
 
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2>Your Profile</h2>
-                <span id="profileStatus" class="profile-status">Not loaded</span>
-            </div>
-            <div class="actions" style="margin-top: 0;">
-                <button class="btn btn-secondary" onclick="openProfileModal()"><i class="fa-solid fa-pencil"></i> Edit Manually</button>
-                
-                <button class="btn btn-secondary" onclick="document.getElementById('resumeAutoFill').click()" style="border: 1px solid #4361ee; color: #4361ee;">
-                    <i class="fa-solid fa-file-pdf"></i> Auto-fill from Resume (PDF)
-                </button>
-                <input type="file" id="resumeAutoFill" style="display:none" accept=".pdf" onchange="handleResumeUpload(event)">
-            </div>
-            <p style="font-size: 0.8rem; color: #666; margin-top: 0.8rem;">
-                Tip: Upload your resume once and it will automatically extract your skills, history, and education.
-            </p>
+<!-- ═══════════════════════════════════════════════ SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-briefcase"></i>
+        <span>Job Analyzer</span>
+    </div>
+    <ul class="sidebar-nav">
+        <li>
+            <a href="#" class="nav-item active" data-view="profile" onclick="showView('profile'); return false;">
+                <i class="fa-regular fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-item" data-view="search" onclick="showView('search'); return false;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Job Search</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-item" data-view="analyzer" onclick="showView('analyzer'); return false;">
+                <i class="fa-regular fa-file-lines"></i>
+                <span>Analyze Job</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-item" data-view="history" onclick="showView('history'); return false;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>History</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+<!-- mobile top bar -->
+<div class="mobile-topbar">
+    <div class="mobile-brand"><i class="fa-solid fa-briefcase"></i> Job Analyzer</div>
+    <nav class="mobile-nav">
+        <a href="#" class="nav-item active" data-view="profile" onclick="showView('profile'); return false;"><i class="fa-regular fa-user"></i> Profile</a>
+        <a href="#" class="nav-item" data-view="search" onclick="showView('search'); return false;"><i class="fa-solid fa-magnifying-glass"></i> Search</a>
+        <a href="#" class="nav-item" data-view="analyzer" onclick="showView('analyzer'); return false;"><i class="fa-regular fa-file-lines"></i> Analyze</a>
+        <a href="#" class="nav-item" data-view="history" onclick="showView('history'); return false;"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+    </nav>
+</div>
+
+<!-- ═══════════════════════════════════════════════ MAIN -->
+<main class="main-content">
+
+    <!-- ─── VIEW: PROFILE ─── -->
+    <section id="view-profile" class="view active">
+        <div class="view-header">
+            <h1>Your Profile</h1>
+            <p class="view-subtitle">Keep your profile up to date for accurate job matching.</p>
         </div>
 
-        <!-- Find Jobs Card -->
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <h2>Find Jobs</h2>
-                <span id="searchStatus" style="font-size: 0.8rem; color: #666;"></span>
+        <div class="card profile-card">
+            <div class="profile-top">
+                <div class="profile-identity">
+                    <div class="avatar" id="profileAvatar">?</div>
+                    <div>
+                        <div class="profile-name" id="profileNameDisplay">Not loaded</div>
+                        <div class="profile-title-display" id="profileTitleDisplay">—</div>
+                        <span class="profile-status" id="profileStatus">Not loaded</span>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button class="btn btn-outline" onclick="document.getElementById('resumeAutoFill').click()">
+                        <i class="fa-solid fa-file-pdf"></i> Auto-fill from Resume
+                    </button>
+                    <input type="file" id="resumeAutoFill" style="display:none" accept=".pdf" onchange="handleResumeUpload(event)">
+                </div>
             </div>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">
-                Automatically searches for remote jobs matching your profile title and skills.
-            </p>
-            <div class="actions" style="margin-top: 0;">
+
+            <form id="profileForm" class="profile-form">
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="pName" required placeholder="Jane Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Current / Target Job Title</label>
+                        <input type="text" id="pTitle" required placeholder="Senior Software Engineer">
+                    </div>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Years of Experience</label>
+                        <input type="number" id="pYears" min="0" placeholder="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum Salary</label>
+                        <input type="number" id="pSalary" placeholder="100000">
+                    </div>
+                </div>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Remote Preference</label>
+                        <select id="pRemote">
+                            <option value="flexible">Flexible</option>
+                            <option value="remote">Remote Only</option>
+                            <option value="hybrid">Hybrid</option>
+                            <option value="onsite">On-site</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Locations</label>
+                        <input type="text" id="pLocations" placeholder="Remote, New York">
+                        <small>Comma-separated</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Skills</label>
+                    <textarea id="pSkills" rows="3" placeholder="Python, JavaScript, React, AWS, SQL..."></textarea>
+                    <small>Comma-separated</small>
+                </div>
+                <div class="form-group">
+                    <label>Education</label>
+                    <textarea id="pEducation" rows="2" placeholder="BS Computer Science, MIT"></textarea>
+                    <small>Comma-separated</small>
+                </div>
+                <div class="form-group">
+                    <label>Professional Summary</label>
+                    <textarea id="pSummary" rows="3" placeholder="Brief description of your background and goals..."></textarea>
+                </div>
+
+                <div class="work-history-section">
+                    <div class="work-history-header">
+                        <h3>Work History</h3>
+                        <button type="button" class="btn btn-outline btn-small" onclick="addWorkEntry()">
+                            <i class="fas fa-plus"></i> Add Job
+                        </button>
+                    </div>
+                    <div id="workHistoryEntries"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ─── VIEW: JOB SEARCH ─── -->
+    <section id="view-search" class="view">
+        <div class="view-header">
+            <h1>Job Search</h1>
+            <p class="view-subtitle">Finds remote USA jobs matching your profile — scored and ranked automatically.</p>
+        </div>
+
+        <div class="card">
+            <div class="search-bar-row">
                 <button class="btn btn-primary" id="searchBtn" onclick="searchJobs()">
                     <i class="fa-solid fa-magnifying-glass"></i> Find Jobs for Me
                 </button>
@@ -49,189 +169,218 @@
                     <div class="spinner"></div>
                     <span>Searching &amp; scoring...</span>
                 </div>
+                <span id="searchStatus" class="search-status-label"></span>
             </div>
             <div class="error-message" id="searchError"></div>
         </div>
 
-        <!-- Job Search Results -->
-        <div class="results" id="searchResults">
-            <div class="card">
-                <h2>Job Matches</h2>
-                <p id="searchQueryUsed" style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;"></p>
-                <div id="jobList"></div>
-            </div>
+        <div id="searchResults" class="search-results-container" style="display:none;">
+            <p id="searchQueryUsed" class="search-meta"></p>
+            <div id="jobList"></div>
+        </div>
+    </section>
+
+    <!-- ─── VIEW: ANALYZER ─── -->
+    <section id="view-analyzer" class="view">
+        <div class="view-header">
+            <h1>Analyze Job</h1>
+            <p class="view-subtitle">Paste, upload, or link a job posting for an AI-powered match report.</p>
         </div>
 
-        <div class="card">
-            <h2>Job Posting</h2>
-
+        <!-- Input card -->
+        <div class="card" id="analyzerInputCard">
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('paste')"><i class="fa-solid fa-paste"></i> Paste Text</button>
-                <button class="tab" onclick="switchTab('upload')"><i class="fa-solid fa-upload"></i> Upload PDF</button>
-                <button class="tab" onclick="switchTab('url')"><i class="fa-solid fa-link"></i> Enter URL</button>
+                <button class="tab active" data-tab="paste" onclick="switchTab('paste')">
+                    <i class="fa-solid fa-paste"></i> Paste Text
+                </button>
+                <button class="tab" data-tab="upload" onclick="switchTab('upload')">
+                    <i class="fa-solid fa-upload"></i> Upload PDF
+                </button>
+                <button class="tab" data-tab="url" onclick="switchTab('url')">
+                    <i class="fa-solid fa-link"></i> Enter URL
+                </button>
             </div>
 
             <div id="tab-paste" class="tab-content active">
-                <textarea id="jobText" placeholder="Paste the job description here..."></textarea>
+                <textarea id="jobText" placeholder="Paste the full job description here..."></textarea>
             </div>
-
             <div id="tab-upload" class="tab-content">
                 <div class="file-upload" id="dropZone" onclick="document.getElementById('fileInput').click()">
                     <input type="file" id="fileInput" accept=".pdf" onchange="handleFileSelect(event)">
+                    <i class="fa-solid fa-cloud-arrow-up file-upload-icon"></i>
                     <p>Drop PDF here or click to upload</p>
                     <p class="filename" id="fileName"></p>
                 </div>
             </div>
-
             <div id="tab-url" class="tab-content">
                 <input type="url" class="url-input" id="jobUrl" placeholder="https://linkedin.com/jobs/view/...">
             </div>
 
             <div class="actions">
-                <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">Analyze Job</button>
+                <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Job
+                </button>
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <span>Analyzing...</span>
                 </div>
             </div>
-
             <div class="error-message" id="errorMessage"></div>
         </div>
 
-        <div class="results" id="results">
-            <div class="card">
-                <h2 id="resultTitle">Job Analysis</h2>
+        <!-- ══════════════════════════ REPORT ══════════════════════════ -->
+        <div id="results" class="results">
 
-                <div class="section">
-                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                        <span class="score-badge" id="scoreBadge">85/100</span>
-                        <span class="verdict" id="applyVerdict">APPLY</span>
-                    </div>
-                    <p style="margin-top: 0.5rem; color: #666;" id="qualSummary"></p>
-                </div>
-
-                <div class="section">
-                    <h3>Skills Match</h3>
-                    <div class="skills-grid">
-                        <div class="skill-list matching">
-                            <h4>Matching Skills</h4>
-                            <ul id="matchingSkills"></ul>
+            <!-- Report header -->
+            <div class="report-header">
+                <div class="report-header-left">
+                    <div class="report-company-logo" id="reportLogo">M</div>
+                    <div class="report-title-block">
+                        <div class="report-analysis-badge" id="reportAnalysisBadge">
+                            <i class="fa-regular fa-clock"></i>
+                            <span id="reportTimestamp">Analysis</span>
                         </div>
-                        <div class="skill-list missing">
-                            <h4>Missing Skills</h4>
-                            <ul id="missingSkills"></ul>
-                        </div>
+                        <h2 id="resultTitle">Job Title</h2>
+                        <div class="report-subtitle" id="reportSubtitle"></div>
+                        <div class="report-meta-chips" id="reportMetaChips"></div>
                     </div>
                 </div>
-
-                <div class="section">
-                    <h3>Why You Should / Shouldn't Apply</h3>
-                    <p id="applyReasoning"></p>
-                </div>
-
-                <div class="section">
-                    <h3>Salary Analysis</h3>
-                    <p id="salaryAssessment"></p>
-                    <p style="margin-top: 0.5rem;"><strong>Recommendation:</strong> <span id="salaryRec"></span></p>
-                </div>
-
-                <div class="section">
-                    <h3>Flags</h3>
-                    <div class="flags">
-                        <div class="flag-group green">
-                            <h4>Green Flags</h4>
-                            <ul id="greenFlags"></ul>
-                        </div>
-                        <div class="flag-group red">
-                            <h4>Red Flags</h4>
-                            <ul id="redFlags"></ul>
-                        </div>
+                <div class="score-ring-wrap">
+                    <svg class="score-ring" viewBox="0 0 100 100" aria-hidden="true">
+                        <circle class="score-ring-track" cx="50" cy="50" r="42"/>
+                        <circle class="score-ring-fill" id="scoreRingFill" cx="50" cy="50" r="42"
+                                stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+                    </svg>
+                    <div class="score-ring-label">
+                        <span class="score-number" id="scoreNumber">—</span>
+                        <span class="score-denom">/ 100 MATCH</span>
                     </div>
-                </div>
-
-                <div class="section">
-                    <h3>Interview Tips</h3>
-                    <ul class="tips-list" id="interviewTips"></ul>
-                </div>
-
-                <div class="section">
-                    <h3>Overall Recommendation</h3>
-                    <div class="recommendation-box" id="overallRec"></div>
-                </div>
-
-                <div style="margin-top: 1.5rem; text-align: right;">
-                    <button class="btn btn-secondary" id="exportBtn" onclick="exportPDF()">
-                        <i class="fa-solid fa-file-pdf"></i> Export PDF
-                    </button>
+                    <div class="score-ring-text" id="scoreRingText">—</div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Profile Modal -->
-    <div class="modal-overlay" id="profileModal">
-        <div class="modal">
-            <h2>Edit Your Profile</h2>
-            <form id="profileForm">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="pName" required>
+            <!-- Apply verdict banner -->
+            <div class="verdict-banner" id="verdictBanner">
+                <div class="verdict-label-block">
+                    <span class="verdict-label-small">Verdict</span>
+                    <span class="verdict-label-main" id="verdictText">—</span>
                 </div>
-                <div class="form-group">
-                    <label>Current/Target Job Title</label>
-                    <input type="text" id="pTitle" required>
+                <div class="verdict-body">
+                    <div class="verdict-headline" id="verdictHeadline"></div>
+                    <div class="verdict-reasoning" id="verdictReasoning"></div>
                 </div>
-                <div class="form-group">
-                    <label>Years of Experience</label>
-                    <input type="number" id="pYears" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label>Skills</label>
-                    <textarea id="pSkills" rows="3" placeholder="Python, JavaScript, React, AWS..."></textarea>
-                    <small>Comma-separated list of your skills</small>
-                </div>
-                <div class="form-group">
-                    <label>Education</label>
-                    <textarea id="pEducation" rows="2" placeholder="BS Computer Science, MIT"></textarea>
-                    <small>Comma-separated list</small>
-                </div>
-                <div class="form-group">
-                    <label>Preferred Locations</label>
-                    <input type="text" id="pLocations" placeholder="New York, Remote, San Francisco">
-                    <small>Comma-separated, or leave blank for any</small>
-                </div>
-                <div class="form-group">
-                    <label>Remote Preference</label>
-                    <select id="pRemote">
-                        <option value="flexible">Flexible</option>
-                        <option value="remote">Remote Only</option>
-                        <option value="hybrid">Hybrid</option>
-                        <option value="onsite">On-site</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Minimum Salary</label>
-                    <input type="number" id="pSalary" placeholder="100000">
-                </div>
-                <div class="form-group">
-                    <label>Summary</label>
-                    <textarea id="pSummary" rows="3" placeholder="Brief description of your background and goals..."></textarea>
-                </div>
-                <div class="work-history-section">
-                    <h3>
-                        Work History
-                        <button type="button" class="btn btn-secondary btn-small" onclick="addWorkEntry()"><i class="fas fa-plus"></i> Add Job</button>
-                    </h3>
-                    <div id="workHistoryEntries"></div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Profile</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            </div>
 
-    <script src="/static/scripts.js"></script>
+            <!-- Skills analysis -->
+            <div class="report-section card">
+                <div class="section-label">Skills Analysis</div>
+                <div class="skills-grid">
+                    <div class="skill-col">
+                        <div class="skill-col-header matching">
+                            <i class="fa-solid fa-check"></i> You Match
+                            <span class="skill-count" id="matchCount">0</span>
+                        </div>
+                        <div class="skill-chips" id="matchingSkills"></div>
+                    </div>
+                    <div class="skill-col">
+                        <div class="skill-col-header missing">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Skills to Cover
+                            <span class="skill-count" id="missingCount">0</span>
+                        </div>
+                        <div class="skill-chips" id="missingSkills"></div>
+                        <div id="trainingResources" style="display:none">
+                            <div class="skills-training-label">
+                                <i class="fa-solid fa-book-open"></i> Skills Training
+                            </div>
+                            <ul class="training-list" id="trainingList"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compensation & Flags -->
+            <div class="report-section report-2col">
+                <!-- Salary -->
+                <div class="card comp-card">
+                    <div class="section-label">Compensation &amp; Flags</div>
+                    <div class="salary-display" id="salaryDisplay">
+                        <div class="salary-range-label" id="salaryRangeLabel">—</div>
+                        <div class="salary-bar-wrap">
+                            <div class="salary-bar">
+                                <div class="salary-bar-fill" id="salaryBarFill"></div>
+                                <div class="salary-target-marker" id="salaryTargetMarker" style="display:none">
+                                    <div class="salary-target-line"></div>
+                                    <div class="salary-target-label">YOUR TARGET</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="salary-assessment-text" id="salaryAssessment"></p>
+                        <p class="salary-rec-text"><strong id="salaryRec"></strong></p>
+                    </div>
+                </div>
+
+                <!-- Flags -->
+                <div class="card flags-card">
+                    <div class="section-label">Green &amp; Red Flags</div>
+                    <div class="flags-cols">
+                        <div class="flag-col green">
+                            <div class="flag-col-header">
+                                <i class="fa-solid fa-circle-check"></i> Green Flags
+                            </div>
+                            <ul id="greenFlags" class="flag-list"></ul>
+                        </div>
+                        <div class="flag-col red">
+                            <div class="flag-col-header">
+                                <i class="fa-solid fa-circle-xmark"></i> Red Flags
+                            </div>
+                            <ul id="redFlags" class="flag-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview Prep + Recommendation -->
+            <div class="report-2col report-section" style="align-items:start;">
+                <div class="card">
+                    <div class="section-label-row">
+                        <div class="section-label">Interview Prep</div>
+                        <div class="tailored-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Tailored to You</div>
+                    </div>
+                    <ol class="interview-tips-list" id="interviewTips"></ol>
+                </div>
+                <div class="card">
+                    <div class="section-label">Overall Recommendation</div>
+                    <div class="recommendation-box" id="overallRec"></div>
+                </div>
+            </div>
+
+            <!-- Report actions -->
+            <div class="report-actions">
+                <button class="btn btn-outline" id="exportBtn" onclick="exportPDF()">
+                    <i class="fa-solid fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+
+        </div>
+        <!-- /results -->
+    </section>
+
+    <!-- ─── VIEW: HISTORY ─── -->
+    <section id="view-history" class="view">
+        <div class="view-header">
+            <h1>Analysis History</h1>
+            <p class="view-subtitle">Every job you've analyzed, saved automatically.</p>
+        </div>
+        <div id="historyList">
+            <div class="history-empty" id="historyEmpty" style="display:none">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <p>No analysis yet. Analyze a job to get started.</p>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script src="/static/scripts.js"></script>
 </body>
 </html>

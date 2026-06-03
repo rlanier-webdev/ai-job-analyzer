@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from .analyzer import JobAnalyzer
+from .database import init_db, save_analysis, list_analysis, get_analysis
 from .parser import JobParser, JobPosting
 from .profile import Profile, load_profile, ProfileManager, save_profile
 from .searcher import JobSearcher
@@ -18,7 +19,8 @@ from .searcher import JobSearcher
 load_dotenv()
 
 PROFILE_PATH = Path(__file__).parent.parent / "profile.json"
-global_data = {"profile": None}
+DB_PATH = Path(__file__).parent.parent / "job_analysis.db"
+global_data = {"profile": None, "db": None}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,7 +31,10 @@ async def lifespan(app: FastAPI):
     # Startup Logic
     if not os.getenv("ANTHROPIC_API_KEY"):
         print("❌ ERROR: ANTHROPIC_API_KEY is missing from .env!")
-    
+
+    global_data["db"] = init_db(DB_PATH)
+    print("✅ Database ready")
+
     if PROFILE_PATH.exists():
         try:
             global_data["profile"] = load_profile(PROFILE_PATH)
@@ -110,12 +115,19 @@ async def analyze_job(
         # 2. Run Analysis
         result = analyzer.analyze(job, current_profile)
         
-        # 3. Return combined data for the UI
-        return {
-            **result.model_dump(), 
-            "job_title": job.title, 
-            "job_company": job.company
+        # 3. Save to history and return combined data for the UI
+        response_data = {
+            **result.model_dump(),
+            "job_title": job.title,
+            "job_company": job.company,
+            "job_location": job.location,
+            "salary_range": job.salary_range,
+            "job_type": job.job_type,
+            "remote_policy": job.remote_policy,
+            "source_url": job.source_url,
         }
+        row_id = save_analysis(global_data["db"], response_data)
+        return {**response_data, "id": row_id}
     except Exception as e:
         print(f"Analysis Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -189,10 +201,20 @@ async def get_profile():
         raise HTTPException(status_code=404, detail="No profile loaded")
     return current_profile.model_dump()
 
+@app.get("/api/history")
+async def get_history():
+    return list_analysis(global_data["db"])
+
+
+@app.get("/api/history/{analysis_id}")
+async def get_history_entry(analysis_id: int):
+    entry = get_analysis(global_data["db"], analysis_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    return entry
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home():
     # Helper to load your index.html file
-    try:
-        return Path("index.html").read_text()
-    except:
-        return "<h1>Job Analyzer</h1><p>Please ensure index.html exists.</p>"
+    return (Path(__file__).parent.parent / "index.html").read_text(encoding="utf-8")

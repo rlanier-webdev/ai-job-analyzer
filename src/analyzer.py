@@ -25,6 +25,11 @@ class JobAnalysis:
     green_flags: list[str]
     interview_tips: list[str]
     overall_recommendation: str
+    training_resources: dict[str, str] = None
+
+    def __post_init__(self):
+        if self.training_resources is None:
+            self.training_resources = {}
 
     def model_dump(self):
         return asdict(self)
@@ -110,8 +115,11 @@ class JobAnalyzer:
             "red_flags": ["string"],
             "green_flags": ["string"],
             "interview_tips": ["string"],
-            "overall_recommendation": "string"
-        }}"""
+            "overall_recommendation": "string",
+            "training_resources": {{"skill_name": "course or resource URL/name", "...": "..."}}
+        }}
+
+        For training_resources: for each missing skill, suggest one specific resource (Coursera course, official docs, book, etc). Only include missing skills."""
 
     def _get_empty_analysis(self, error_msg: str) -> JobAnalysis:
-        return JobAnalysis(0, f"Error: {error_msg}", [], [], False, "N/A", "N/A", "N/A", ["API Error"], [], [], "Analysis failed.")
+        return JobAnalysis(0, f"Error: {error_msg}", [], [], False, "N/A", "N/A", "N/A", ["API Error"], [], [], "Analysis failed.", {})
