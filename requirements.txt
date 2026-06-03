@@ -16,3 +16,7 @@ playwright>=1.58.0
 
 # Optional but Recommended
 httpx>=0.28.1            # If you plan to use async URL fetching
+
+# Development & Testing
+pytest>=9.0.0
+pytest-asyncio>=1.4.0

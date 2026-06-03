@@ -3,7 +3,7 @@ import os
 import re
 import json
 import requests
-import anthropic # type: ignore
+import anthropic
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
@@ -140,12 +140,6 @@ class JobParser:
     def _llm_extract(self, raw_content: str) -> JobPosting:
         """Uses Claude to transform messy text into a structured JobPosting object."""
 
-        # Debug: see the first 500 characters being sent
-        print("=" * 50)
-        print("RAW CONTENT PREVIEW:")
-        print(raw_content[:500])
-        print("=" * 50)
-
         prompt = f"""
         Extract job details from the following text into a structured JSON format.
         Focus on technical requirements and specific benefits.
@@ -183,13 +177,6 @@ class JobParser:
             
             text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response.content[0].text.strip())
             data = json.loads(text)
-
-            # Debug: see what Claude extracted
-            print("EXTRACTED DATA:")
-            print(f"Company: {data.get('company')}")
-            print(f"Title: {data.get('title')}")
-            print("=" * 50)
-
             data["raw_text"] = raw_content[:5000] 
             return JobPosting(**data)
             

@@ -30,6 +30,10 @@ function handleFileSelect(event) {
     }
 }
 
+function exportPDF() {
+    window.print();
+}
+
 async function analyze() {
     const btn = document.getElementById('analyzeBtn');
     const loading = document.getElementById('loading');
@@ -124,6 +128,121 @@ function displayResults(data) {
     results.scrollIntoView({ behavior: 'smooth' });
 }
 
+async function searchJobs() {
+    const btn = document.getElementById('searchBtn');
+    const loading = document.getElementById('searchLoading');
+    const errorEl = document.getElementById('searchError');
+    const resultsEl = document.getElementById('searchResults');
+
+    btn.disabled = true;
+    loading.classList.add('active');
+    errorEl.classList.remove('active');
+    resultsEl.classList.remove('active');
+
+    try {
+        const response = await fetch('/api/search', { method: 'POST' });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.detail || 'Search failed');
+        }
+        const data = await response.json();
+        displayJobList(data);
+    } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.add('active');
+    } finally {
+        btn.disabled = false;
+        loading.classList.remove('active');
+    }
+}
+
+function displayJobList(data) {
+    const resultsEl = document.getElementById('searchResults');
+    const listEl = document.getElementById('jobList');
+    document.getElementById('searchQueryUsed').textContent =
+        `Search query: "${data.query_used}" — ${data.jobs.length} result(s)`;
+
+    listEl.innerHTML = '';
+
+    data.jobs.forEach(job => {
+        const scoreClass = job.score !== null
+            ? (job.score >= 80 ? 'score-high' : job.score >= 60 ? 'score-mid' : 'score-low')
+            : '';
+        const scoreBadge = job.score !== null
+            ? `<span class="score-badge ${scoreClass}">${job.score}/100</span>`
+            : `<span class="score-badge score-unscored">Unscored</span>`;
+        const verdictBadge = job.should_apply === true
+            ? `<span class="verdict verdict-yes">APPLY</span>`
+            : job.should_apply === false
+            ? `<span class="verdict verdict-no">SKIP</span>`
+            : '';
+
+        const card = document.createElement('div');
+        card.className = 'job-card';
+        card.innerHTML = `
+            <div class="job-card-header">
+                <div>
+                    <div class="job-card-title"></div>
+                    <div class="job-card-meta"></div>
+                    ${job.salary ? '<div class="job-card-salary"></div>' : ''}
+                </div>
+                ${scoreBadge}
+            </div>
+            ${job.summary ? '<p class="job-card-summary"></p>' : ''}
+            <div class="job-card-footer">
+                ${verdictBadge}
+                <a href="" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-small">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> View Posting
+                </a>
+                <button class="btn btn-secondary btn-small js-full-analysis">Full Analysis</button>
+            </div>`;
+
+        card.querySelector('.job-card-title').textContent = job.title;
+        card.querySelector('.job-card-meta').textContent = `${job.company} · ${job.location}`;
+        if (job.salary) card.querySelector('.job-card-salary').textContent = job.salary;
+        if (job.summary) card.querySelector('.job-card-summary').textContent = job.summary;
+        card.querySelector('a').href = job.url;
+        card.querySelector('.js-full-analysis').addEventListener('click', () => analyzeFromSearch(job.url));
+
+        listEl.appendChild(card);
+    });
+
+    resultsEl.classList.add('active');
+    resultsEl.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function handleResumeUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const status = document.getElementById("profileStatus");
+    status.textContent = "Processing Resume...";
+    status.className = "profile-status";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await fetch("/api/profile/upload-resume", {
+            method: "POST",
+            body: formData,
+        });
+        if (!response.ok) throw new Error("Failed to parse resume");
+        const newProfile = await response.json();
+        updateProfileUI(newProfile);
+        alert("Profile updated successfully from resume!");
+    } catch (err) {
+        alert("Error: " + err.message);
+        status.textContent = "Upload Failed";
+    }
+}
+
+function analyzeFromSearch(url) {
+    switchTab('url');
+    document.getElementById('jobUrl').value = url;
+    document.querySelector('#tab-url').closest('.card').scrollIntoView({ behavior: 'smooth' });
+}
+
 function addWorkEntry(data = {}) {
     const container = document.getElementById('workHistoryEntries');
     const id = workEntryId++;
@@ -159,61 +278,22 @@ function loadWorkHistory(history) {
     (history || []).forEach(addWorkEntry);
 }
 
+function updateProfileUI(profile) {
+    document.getElementById("profileStatus").textContent = `Loaded: ${profile.name}`;
+    document.getElementById("profileStatus").classList.add("loaded");
+    document.getElementById("pName").value = profile.name || "";
+    document.getElementById("pTitle").value = profile.title || "";
+    document.getElementById("pYears").value = profile.years_experience || 0;
+    document.getElementById("pSkills").value = (profile.skills || []).join(", ");
+    document.getElementById("pEducation").value = (profile.education || []).join(", ");
+    document.getElementById("pLocations").value = (profile.preferred_locations || []).join(", ");
+    document.getElementById("pRemote").value = profile.remote_preference || "flexible";
+    document.getElementById("pSalary").value = profile.min_salary || "";
+    document.getElementById("pSummary").value = profile.summary || "";
+    loadWorkHistory(profile.work_history);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // --- NEW: RESUME AUTO-FILL ---
-    async function handleResumeUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const status = document.getElementById("profileStatus");
-      status.textContent = "Processing Resume...";
-      status.className = "profile-status";
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await fetch("/api/profile/upload-resume", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) throw new Error("Failed to parse resume");
-
-        const newProfile = await response.json();
-        updateProfileUI(newProfile);
-        alert("Profile updated successfully from resume!");
-      } catch (err) {
-        alert("Error: " + err.message);
-        status.textContent = "Upload Failed";
-      }
-    }
-
-    function updateProfileUI(profile) {
-      document.getElementById("profileStatus").textContent =
-        `Loaded: ${profile.name}`;
-      document.getElementById("profileStatus").classList.add("loaded");
-
-      // Fill form fields
-      document.getElementById("pName").value = profile.name || "";
-      document.getElementById("pTitle").value = profile.title || "";
-      document.getElementById("pYears").value = profile.years_experience || 0;
-      document.getElementById("pSkills").value = (profile.skills || []).join(
-        ", ",
-      );
-      document.getElementById("pEducation").value = (
-        profile.education || []
-      ).join(", ");
-      document.getElementById("pLocations").value = (
-        profile.preferred_locations || []
-      ).join(", ");
-      document.getElementById("pRemote").value =
-        profile.remote_preference || "flexible";
-      document.getElementById("pSalary").value = profile.min_salary || "";
-      document.getElementById("pSummary").value = profile.summary || "";
-      loadWorkHistory(profile.work_history);
-    }
-
     async function loadProfile() {
       try {
         const response = await fetch("/api/profile");

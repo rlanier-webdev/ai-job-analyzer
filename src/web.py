@@ -1,14 +1,18 @@
 import os
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from .analyzer import JobAnalyzer
-from .parser import JobParser
+from .parser import JobParser, JobPosting
 from .profile import Profile, load_profile, ProfileManager, save_profile
+from .searcher import JobSearcher
 
 # Load .env at the very start
 load_dotenv()
@@ -37,10 +41,13 @@ async def lifespan(app: FastAPI):
     # Shutdown logic (if any) goes here
 
 app = FastAPI(
-    title="Job Analyzer", 
+    title="Job Analyzer",
     description="Intelligent job matching with Claude",
     lifespan=lifespan
 )
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+_executor = ThreadPoolExecutor(max_workers=10)
 
 # Mount static files
 static_dir = Path(__file__).parent.parent / "static"
@@ -50,6 +57,7 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 parser = JobParser()
 analyzer = JobAnalyzer()
 profile_manager = ProfileManager()
+searcher = JobSearcher()
 
 # --- API ENDPOINTS ---
 
@@ -112,6 +120,55 @@ async def analyze_job(
         print(f"Analysis Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/search")
+async def search_jobs():
+    """Search Remotive for jobs matching the loaded profile; auto-analyze top 5."""
+    current_profile = global_data.get("profile")
+    if not current_profile:
+        raise HTTPException(status_code=400, detail="Please upload or create a profile first.")
+
+    semaphore = asyncio.Semaphore(3)
+
+    async def _analyze_one(result):
+        job_posting = JobPosting(
+            title=result.title,
+            company=result.company,
+            location=result.location,
+            salary_range=result.salary,
+            job_type="full-time",
+            remote_policy=result.remote_policy,
+            description=result.description_snippet,
+            requirements=result.tags,
+            nice_to_have=[],
+            benefits=[],
+            source_url=result.url,
+        )
+        loop = asyncio.get_running_loop()
+        async with semaphore:
+            analysis = await loop.run_in_executor(_executor, analyzer.analyze, job_posting, current_profile)
+        return result, analysis
+
+    try:
+        results = searcher.search(current_profile, limit=10)
+        query_used = searcher.build_query(current_profile)
+
+        pairs = await asyncio.gather(*[_analyze_one(r) for r in results])
+        jobs = [
+            {
+                **r.model_dump(),
+                "score": a.qualification_score,
+                "should_apply": a.should_apply,
+                "summary": a.qualification_summary,
+            }
+            for r, a in pairs if a.qualification_score >= 75
+        ]
+        jobs.sort(key=lambda j: j["score"], reverse=True)
+        return {"jobs": jobs, "query_used": query_used}
+    except Exception as e:
+        print(f"Search Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/profile")
 async def save_profile_endpoint(profile: Profile):
     """Save a manually created profile."""
@@ -131,22 +188,6 @@ async def get_profile():
     if not current_profile:
         raise HTTPException(status_code=404, detail="No profile loaded")
     return current_profile.model_dump()
-
-@app.get("/static/styles.css")
-async def get_styles():
-    """Serve the CSS file."""
-    css_path = static_dir / "styles.css"
-    if css_path.exists():
-        return FileResponse(css_path, media_type="text/css")
-    raise HTTPException(status_code=404, detail="CSS file not found")
-
-@app.get("/static/scripts.js")
-async def get_scripts():
-    """Serve the JavaScript file."""
-    js_path = static_dir / "scripts.js"
-    if js_path.exists():
-        return FileResponse(js_path, media_type="application/javascript")
-    raise HTTPException(status_code=404, detail="JavaScript file not found")
 
 @app.get("/", response_class=HTMLResponse)
 async def home():

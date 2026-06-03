@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Analyzer</title>
     <link rel="stylesheet" href="/static/styles.css">
-    <script src="https://kit.fontawesome.com/3b1ab49e86.js" crossorigin="anonymous"></script></head>
+    <script defer src="https://kit.fontawesome.com/3b1ab49e86.js" crossorigin="anonymous"></script>
+</head>
 <body>
     <div class="container">
         <header>
@@ -29,6 +30,36 @@
             <p style="font-size: 0.8rem; color: #666; margin-top: 0.8rem;">
                 Tip: Upload your resume once and it will automatically extract your skills, history, and education.
             </p>
+        </div>
+
+        <!-- Find Jobs Card -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h2>Find Jobs</h2>
+                <span id="searchStatus" style="font-size: 0.8rem; color: #666;"></span>
+            </div>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">
+                Automatically searches for remote jobs matching your profile title and skills.
+            </p>
+            <div class="actions" style="margin-top: 0;">
+                <button class="btn btn-primary" id="searchBtn" onclick="searchJobs()">
+                    <i class="fa-solid fa-magnifying-glass"></i> Find Jobs for Me
+                </button>
+                <div class="loading" id="searchLoading">
+                    <div class="spinner"></div>
+                    <span>Searching &amp; scoring...</span>
+                </div>
+            </div>
+            <div class="error-message" id="searchError"></div>
+        </div>
+
+        <!-- Job Search Results -->
+        <div class="results" id="searchResults">
+            <div class="card">
+                <h2>Job Matches</h2>
+                <p id="searchQueryUsed" style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;"></p>
+                <div id="jobList"></div>
+            </div>
         </div>
 
         <div class="card">
@@ -126,6 +157,12 @@
                 <div class="section">
                     <h3>Overall Recommendation</h3>
                     <div class="recommendation-box" id="overallRec"></div>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align: right;">
+                    <button class="btn btn-secondary" id="exportBtn" onclick="exportPDF()">
+                        <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    </button>
                 </div>
             </div>
         </div>
