@@ -1,17 +1,19 @@
 # Job Analyzer
 
-An AI-powered web application that analyzes job postings against your professional profile to provide intelligent matching recommendations, skill gap analysis, and personalized interview tips.
+An AI-powered web application that automatically finds and analyzes job postings against your professional profile to provide intelligent matching recommendations, skill gap analysis, and personalized interview tips.
 
 ## Features
 
+- **Automatic Job Search**: Finds remote USA jobs matching your profile title and skills — scored and ranked automatically
 - **Resume Auto-fill**: Upload a PDF resume to automatically extract and structure your profile data
 - **Multi-input Job Analysis**: Analyze jobs via pasted text, PDF upload, or URL scraping
-- **Qualification Scoring**: Get a 0-100 match score with color-coded ratings
+- **Qualification Scoring**: Get a 0-100 match score with color-coded ratings (only jobs ≥75 shown)
 - **Skills Analysis**: See matching skills (green) vs. missing skills (red)
 - **Apply Verdict**: Clear YES/NO recommendation with reasoning
 - **Salary Assessment**: Compare job compensation against your expectations
 - **Red/Green Flags**: Identify potential concerns and positive indicators
 - **Interview Tips**: Personalized preparation advice based on the job requirements
+- **Export to PDF**: Export any analysis result to PDF directly from the browser
 
 ## Tech Stack
 
@@ -61,18 +63,25 @@ An AI-powered web application that analyzes job postings against your profession
    python main.py
    ```
 
-2. Open your browser to `http://127.0.0.1:8000`
+2. Open your browser to `http://127.0.0.1:8001`
 
 3. Set up your profile:
    - Click "Auto-fill from Resume (PDF)" to upload your resume, OR
    - Click "Edit Manually" to enter your information
 
-4. Analyze a job posting:
+4. Find jobs automatically:
+   - Click "Find Jobs for Me" to search for remote USA jobs matching your profile
+   - Results are scored by Claude and ranked — only matches ≥75% shown
+   - Click "Full Analysis" on any result for a deep-dive, or "View Posting" to open the original
+
+5. Analyze a specific job posting:
    - Choose input method (Paste Text / Upload PDF / Enter URL)
    - Provide the job posting content
    - Click "Analyze Job"
 
-5. Review your results including qualification score, skill matches, and recommendations
+6. Review your results including qualification score, skill matches, and recommendations
+
+7. Click **Export PDF** to save the analysis results to a PDF file
 
 ## Project Structure
 
@@ -87,7 +96,8 @@ job-analyzer/
 │   ├── web.py          # FastAPI routes & endpoints
 │   ├── parser.py       # Job posting extraction logic
 │   ├── analyzer.py     # Job-profile matching analysis
-│   └── profile.py      # Profile data model & management
+│   ├── profile.py      # Profile data model & management
+│   └── searcher.py     # Automatic job search (Remotive API)
 └── static/
     ├── styles.css      # UI styling
     └── scripts.js      # Frontend JavaScript
@@ -102,11 +112,13 @@ job-analyzer/
 | POST | `/api/profile` | Save profile manually |
 | POST | `/api/profile/upload-resume` | Parse resume PDF and create profile |
 | POST | `/api/analyze/{mode}` | Analyze job (mode: text, pdf, or url) |
+| POST | `/api/search` | Search for jobs matching the current profile |
 
 ## Configuration
 
 - **Profile Storage**: Your profile is saved to `profile.json` and automatically loaded on startup
-- **Server**: Runs on `127.0.0.1:8000` (localhost only)
+- **Server**: Runs on `127.0.0.1:8001` (localhost only)
+- **Job Search**: Powered by [Remotive API](https://remotive.com/api/remote-jobs) — free, no API key required. Searches remote USA-eligible jobs and filters results to ≥75% match score.
 
 ## Screenshots
 <img width="945" height="811" alt="image" src="https://github.com/user-attachments/assets/7dc1bb3f-654c-4a86-98cd-56f98a237c26" />

@@ -476,3 +476,92 @@ textarea:focus {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
 }
+
+/* Job Search Cards */
+.job-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.2s;
+}
+
+.job-card:hover {
+    border-color: #4361ee;
+}
+
+.job-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.job-card-title {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 1rem;
+}
+
+.job-card-meta {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.2rem;
+}
+
+.job-card-salary {
+    font-size: 0.8rem;
+    color: #38a169;
+    font-weight: 500;
+    margin-top: 0.2rem;
+}
+
+.job-card-summary {
+    font-size: 0.9rem;
+    color: #444;
+    margin: 0.5rem 0 0;
+}
+
+.job-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.score-unscored {
+    background: #e9ecef;
+    color: #666;
+}
+@media print {
+    /* Hide everything by default */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Show only the results card and its children */
+    #results, #results * {
+        visibility: visible;
+    }
+
+    /* Position it at the top-left of the page */
+    #results {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    /* Hide the export button itself when printing */
+    #exportBtn {
+        display: none;
+    }
+
+    /* Remove shadows and rounded corners — cleaner on paper */
+    .card {
+        box-shadow: none;
+        border-radius: 0;
+    }
+}
