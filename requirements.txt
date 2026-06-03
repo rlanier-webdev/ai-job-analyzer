@@ -7,6 +7,7 @@ python-dotenv>=1.2.2     # Modern .env handling
 fastapi>=0.135.1        # Modern FastAPI with lifespan support
 uvicorn>=0.41.0          # Stable ASGI server
 python-multipart>=0.0.22 # Required for file/form handling in FastAPI
+slowapi>=0.1.9           # Rate limiting for FastAPI/Starlette
 
 # Extraction & Scraping
 beautifulsoup4>=4.14.3   # Standard for HTML parsing

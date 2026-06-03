@@ -1,9 +1,12 @@
+import logging
 import os
 import re
 import json
 import anthropic
 from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 from .parser import JobPosting
 from .profile import Profile
@@ -62,7 +65,7 @@ class JobAnalyzer:
             return analysis
             
         except Exception as e:
-            print(f"❌ Claude Analysis Error: {e}")
+            logger.error("Claude analysis error: %s", e)
             return self._get_empty_analysis(str(e))
 
     def _apply_skill_threshold(self, analysis: JobAnalysis) -> JobAnalysis:

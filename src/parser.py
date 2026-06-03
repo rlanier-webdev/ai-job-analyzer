@@ -1,7 +1,10 @@
 import io
+import ipaddress
+import logging
 import os
 import re
 import json
+import socket
 import requests
 import anthropic
 from urllib.parse import urlparse
@@ -10,6 +13,8 @@ from pydantic import BaseModel
 from pypdf import PdfReader
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -75,12 +80,44 @@ class JobParser:
             return await self.parse_url(source)
         return self.parse_text(source)
 
+    # Private/reserved IP ranges that job URLs should never resolve to
+    _BLOCKED_NETS = [
+        ipaddress.ip_network("10.0.0.0/8"),
+        ipaddress.ip_network("172.16.0.0/12"),
+        ipaddress.ip_network("192.168.0.0/16"),
+        ipaddress.ip_network("127.0.0.0/8"),
+        ipaddress.ip_network("169.254.0.0/16"),  # AWS metadata / link-local
+        ipaddress.ip_network("100.64.0.0/10"),   # Carrier-grade NAT
+        ipaddress.ip_network("::1/128"),
+        ipaddress.ip_network("fc00::/7"),
+    ]
+
     def _is_url(self, text: str) -> bool:
         try:
             result = urlparse(text.strip())
             return all([result.scheme in ("http", "https"), result.netloc])
         except Exception:
             return False
+
+    def _validate_url(self, url: str) -> None:
+        """Reject non-HTTP schemes and URLs that resolve to private/internal addresses (SSRF guard)."""
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError(f"URL scheme '{parsed.scheme}' is not allowed")
+        hostname = parsed.hostname
+        if not hostname:
+            raise ValueError("URL has no hostname")
+        try:
+            addr_infos = socket.getaddrinfo(hostname, None)
+        except socket.gaierror:
+            raise ValueError(f"Could not resolve hostname: {hostname}")
+        for _, _, _, _, sockaddr in addr_infos:
+            try:
+                ip = ipaddress.ip_address(sockaddr[0])
+            except ValueError:
+                continue
+            if any(ip in net for net in self._BLOCKED_NETS):
+                raise ValueError(f"URL resolves to a blocked private/internal address")
     
     def _needs_javascript(self, text: str) -> bool:
         """Check if the page content indicates Javascript is required."""
@@ -95,7 +132,7 @@ class JobParser:
     
     async def _scrape_with_playwright(self, url: str) -> str:
         """Slower scrape using Playwright (runs Javascript)."""
-        print("🔄 Page requires JavaScript, using Playwright...")
+        logger.info("Page requires JavaScript, switching to Playwright")
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page()
@@ -107,6 +144,7 @@ class JobParser:
 
     async def parse_url(self, url: str) -> JobPosting:
         try:
+            self._validate_url(url)
             # Try simple request first
             html = self._scrape_with_requests(url)
 
@@ -181,5 +219,5 @@ class JobParser:
             return JobPosting(**data)
             
         except Exception as e:
-            print(f"❌ Claude Extraction Error: {e}")
+            logger.error("Claude extraction error: %s", e)
             raise
