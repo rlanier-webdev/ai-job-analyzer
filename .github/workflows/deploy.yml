@@ -1,0 +1,25 @@
+name: Deploy to WSL
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull latest code
+        run: |
+          cd ~/projects/job-analyzer
+          git pull origin main
+
+      - name: Install dependencies
+        run: |
+          cd ~/projects/job-analyzer
+          venv/bin/pip install -r requirements.txt
+
+      - name: Restart the app
+        run: |
+          sudo systemctl restart job-analyzer
