@@ -29,8 +29,12 @@ from .searcher import JobSearcher
 # Load .env at the very start
 load_dotenv()
 
-PROFILE_PATH = Path(__file__).parent.parent / "profile.json"
-DB_PATH = Path(__file__).parent.parent / "job_analysis.db"
+_profile_path = os.getenv("PROFILE_PATH")
+_db_path = os.getenv("DB_PATH")
+if not _profile_path or not _db_path:
+    raise RuntimeError("PROFILE_PATH and DB_PATH must be set in .env")
+PROFILE_PATH = Path(_profile_path)
+DB_PATH = Path(_db_path)
 global_data = {"profile": None, "db": None}
 
 @asynccontextmanager
