@@ -1,9 +1,12 @@
+import logging
 import os
 import re
 import json
 import anthropic
 from dataclasses import dataclass, asdict
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 from .parser import JobPosting
 from .profile import Profile
@@ -25,6 +28,11 @@ class JobAnalysis:
     green_flags: list[str]
     interview_tips: list[str]
     overall_recommendation: str
+    training_resources: dict[str, str] = None
+
+    def __post_init__(self):
+        if self.training_resources is None:
+            self.training_resources = {}
 
     def model_dump(self):
         return asdict(self)
@@ -57,7 +65,7 @@ class JobAnalyzer:
             return analysis
             
         except Exception as e:
-            print(f"❌ Claude Analysis Error: {e}")
+            logger.error("Claude analysis error: %s", e)
             return self._get_empty_analysis(str(e))
 
     def _apply_skill_threshold(self, analysis: JobAnalysis) -> JobAnalysis:
@@ -110,8 +118,11 @@ class JobAnalyzer:
             "red_flags": ["string"],
             "green_flags": ["string"],
             "interview_tips": ["string"],
-            "overall_recommendation": "string"
-        }}"""
+            "overall_recommendation": "string",
+            "training_resources": {{"skill_name": "course or resource URL/name", "...": "..."}}
+        }}
+
+        For training_resources: for each missing skill, suggest one specific resource (Coursera course, official docs, book, etc). Only include missing skills."""
 
     def _get_empty_analysis(self, error_msg: str) -> JobAnalysis:
-        return JobAnalysis(0, f"Error: {error_msg}", [], [], False, "N/A", "N/A", "N/A", ["API Error"], [], [], "Analysis failed.")
+        return JobAnalysis(0, f"Error: {error_msg}", [], [], False, "N/A", "N/A", "N/A", ["API Error"], [], [], "Analysis failed.", {})

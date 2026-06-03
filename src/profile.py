@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import json
@@ -6,8 +7,9 @@ from pathlib import Path
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 class Profile(BaseModel):
     """User profile containing skills, experience, and preferences."""
@@ -36,7 +38,7 @@ class ProfileManager:
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
 
         if not self.api_key:
-            print("⚠️ Warning: No Anthropic API Key found. Profile generation will fail.")
+            logger.warning("No Anthropic API Key found. Profile generation will fail.")
 
         self.client = anthropic.Anthropic(api_key=self.api_key)
         self.model_id = "claude-sonnet-4-6"
@@ -84,7 +86,7 @@ class ProfileManager:
             
             return Profile(**data)
         except Exception as e:
-            print(f"❌ Error parsing resume with Claude: {e}")
+            logger.error("Error parsing resume with Claude: %s", e)
             raise
 
 def load_profile(path: str | Path) -> Profile:
