@@ -51,12 +51,13 @@ async function analyze() {
 
     try {
         const formData = new FormData();
-        let endpoint = `/api/analyze/${currentTab}`;
+        let endpoint;
 
         if (currentTab === 'paste') {
             const text = document.getElementById('jobText').value;
             if (!text.trim()) throw new Error('Please paste a job description');
             formData.append('job_text', text);
+            endpoint = '/api/analyze/text';
         } else if (currentTab === 'upload') {
             if (!selectedFile) throw new Error('Please select a PDF file');
             formData.append('file', selectedFile);
@@ -65,13 +66,14 @@ async function analyze() {
             const url = document.getElementById('jobUrl').value;
             if (!url.trim()) throw new Error('Please enter a URL');
             formData.append('url', url);
+            endpoint = '/api/analyze/url';
         }
 
         const response = await fetch(endpoint, { method: 'POST', body: formData });
 
         if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.detail || 'Analysis failed');
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(_errorText(errData.detail) || 'Analysis failed');
         }
 
         const data = await response.json();
@@ -238,10 +240,13 @@ function _renderTrainingResources(resources) {
     }
     wrap.style.display = 'block';
     list.innerHTML = entries.map(([skill, resource]) => {
-        const isUrl = resource.startsWith('http');
+        const safeResource = typeof resource === 'string'
+            ? resource
+            : (resource?.url || resource?.name || resource?.title || String(resource));
+        const isUrl = safeResource.startsWith('http');
         const resourceHTML = isUrl
-            ? `<a href="${_esc(resource)}" target="_blank" rel="noopener noreferrer">${_esc(resource)}</a>`
-            : _esc(resource);
+            ? `<a href="${_esc(safeResource)}" target="_blank" rel="noopener noreferrer">${_esc(safeResource)}</a>`
+            : _esc(safeResource);
         return `<li class="training-item">
             <span class="training-skill">${_esc(skill)}</span>
             <span class="training-resource">${resourceHTML}</span>
@@ -586,6 +591,18 @@ function _esc(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+// Coerce a FastAPI error `detail` into a readable string. For 422 responses
+// `detail` is a list of error objects, which would otherwise render as
+// "[object Object]" in the error banner.
+function _errorText(detail) {
+    if (!detail) return '';
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail)) {
+        return detail.map(d => d?.msg || JSON.stringify(d)).join('; ');
+    }
+    return detail.msg || JSON.stringify(detail);
 }
 
 // ─── Init ─────────────────────────────────────────────────

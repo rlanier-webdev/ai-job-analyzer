@@ -57,6 +57,16 @@ class JobAnalyzer:
 
             text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response.content[0].text.strip())
             data = json.loads(text)
+
+            if isinstance(data.get('training_resources'), dict):
+                data['training_resources'] = {
+                    skill: (
+                        v.get('url') or v.get('link') or v.get('name') or v.get('title') or str(v)
+                        if isinstance(v, dict) else str(v) if not isinstance(v, str) else v
+                    )
+                    for skill, v in data['training_resources'].items()
+                }
+
             analysis = JobAnalysis(**data)
 
             # Check if missing too many skills
@@ -119,7 +129,7 @@ class JobAnalyzer:
             "green_flags": ["string"],
             "interview_tips": ["string"],
             "overall_recommendation": "string",
-            "training_resources": {{"skill_name": "course or resource URL/name", "...": "..."}}
+            "training_resources": {{"skill_name": "https://example.com or plain text resource name"}}
         }}
 
         For training_resources: for each missing skill, suggest one specific resource (Coursera course, official docs, book, etc). Only include missing skills."""
