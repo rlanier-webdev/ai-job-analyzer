@@ -2,10 +2,10 @@
 
 ```
 venv\Scripts\activate                        # activate virtual environment
-uvicorn src.web:app --reload --port 8001     # start dev server
+uvicorn src.web:app --reload --port 5003     # start dev server
 ```
 
-App runs at http://127.0.0.1:8001
+App runs at http://127.0.0.1:5003
 
 ## Project Structure
 
@@ -31,4 +31,4 @@ Backend APIs are unchanged — all routes in `src/web.py`.
 
 - No `app/` directory — `uvicorn app.main:app` is incorrect for this project
 - venv is `venv/` not `.venv/`
-- Server binds to `127.0.0.1` (localhost only), port `8001`
+- Server binds to `127.0.0.1` (localhost only), port `5003`

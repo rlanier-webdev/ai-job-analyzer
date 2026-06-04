@@ -63,7 +63,7 @@ An AI-powered web application that automatically finds and analyzes job postings
    python main.py
    ```
 
-2. Open your browser to `http://127.0.0.1:8001`
+2. Open your browser to `http://127.0.0.1:5003`
 
 3. Set up your profile:
    - Click "Auto-fill from Resume (PDF)" to upload your resume, OR
@@ -117,7 +117,7 @@ job-analyzer/
 ## Configuration
 
 - **Profile Storage**: Your profile is saved to `profile.json` and automatically loaded on startup
-- **Server**: Runs on `127.0.0.1:8001` (localhost only)
+- **Server**: Runs on `127.0.0.1:5003` (localhost only)
 - **Job Search**: Powered by [Remotive API](https://remotive.com/api/remote-jobs) — free, no API key required. Searches remote USA-eligible jobs and filters results to ≥75% match score.
 
 ## Screenshots

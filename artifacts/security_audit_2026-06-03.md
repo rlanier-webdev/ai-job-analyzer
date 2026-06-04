@@ -3,7 +3,7 @@
 **Branch:** redesign  
 **Auditor:** Claude (claude-sonnet-4-6)  
 **Scope:** Full codebase — `src/`, `static/`, `index.html`, `requirements.txt`  
-**Deployment context:** Personal home-server tool, single user, localhost-only (`127.0.0.1:8001`)
+**Deployment context:** Personal home-server tool, single user, localhost-only (`127.0.0.1:5003`)
 
 ---
 
@@ -257,7 +257,7 @@ These were checked and confirmed **not vulnerable**:
 After applying fixes, verify with:
 
 1. **Rate limiting:** Rapid-fire 12 POST requests to `/api/analyze/text` → expect 429 on request 11+
-2. **SSRF:** `POST /api/analyze/url` with `url=http://127.0.0.1:8001/api/profile` → expect 400 "private/internal address"
+2. **SSRF:** `POST /api/analyze/url` with `url=http://127.0.0.1:5003/api/profile` → expect 400 "private/internal address"
 3. **PDF magic bytes:** Upload a `.txt` file renamed to `.pdf` → expect 400 "not a valid PDF"
 4. **File size:** Upload a file >10 MB with `.pdf` extension → expect 400 "exceeds 10 MB"
 5. **AnalyzeMode enum:** `POST /api/analyze/badmode` → expect 422 Unprocessable Entity
