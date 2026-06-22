@@ -50,10 +50,15 @@ class JobAnalyzer:
         try:
             response = self.client.messages.create(
                 model=self.model_id,
-                max_tokens=2048,
+                max_tokens=4096,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.2
             )
+
+            # A truncated response yields malformed JSON; fail loudly and retryably
+            # rather than letting json.loads raise a cryptic parse error.
+            if response.stop_reason == "max_tokens":
+                raise ValueError("Analysis response was truncated (max_tokens). Try again.")
 
             text = re.sub(r'^```(?:json)?\s*|\s*```$', '', response.content[0].text.strip())
             data = json.loads(text)
