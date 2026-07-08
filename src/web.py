@@ -182,7 +182,7 @@ async def search_jobs(request: Request):
     if not current_profile:
         raise HTTPException(status_code=400, detail="Please upload or create a profile first.")
 
-    semaphore = asyncio.Semaphore(3)
+    semaphore = asyncio.Semaphore(5)
 
     async def _analyze_one(result):
         job_posting = JobPosting(
@@ -204,7 +204,7 @@ async def search_jobs(request: Request):
         return result, analysis
 
     try:
-        results = searcher.search(current_profile, limit=10)
+        results = searcher.search(current_profile, limit=6)
         query_used = searcher.build_query(current_profile)
 
         pairs = await asyncio.gather(*[_analyze_one(r) for r in results])

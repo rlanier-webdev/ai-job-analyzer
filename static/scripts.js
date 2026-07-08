@@ -335,8 +335,14 @@ async function searchJobs() {
     try {
         const response = await fetch('/api/search', { method: 'POST' });
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || 'Search failed');
+            let message = 'Search failed';
+            try {
+                const err = await response.json();
+                message = err.detail || message;
+            } catch {
+                message = `Search failed (${response.status})`;
+            }
+            throw new Error(message);
         }
         const data = await response.json();
         displayJobList(data);
