@@ -43,6 +43,8 @@ class TestSearchEndpoint:
         analysis_low = make_analysis(score=50)
 
         with patch("src.web.searcher.search", return_value=[result, result]), \
+             patch("src.web.greenhouse_searcher.search", return_value=[]), \
+             patch("src.web.ashby_searcher.search", return_value=[]), \
              patch("src.web.analyzer.analyze", side_effect=[analysis_high, analysis_low]):
             response = self.client.post("/api/search")
 
@@ -63,6 +65,8 @@ class TestSearchEndpoint:
         analyses = [make_analysis(score=s) for s in [76, 90, 82]]
 
         with patch("src.web.searcher.search", return_value=[result, result, result]), \
+             patch("src.web.greenhouse_searcher.search", return_value=[]), \
+             patch("src.web.ashby_searcher.search", return_value=[]), \
              patch("src.web.analyzer.analyze", side_effect=analyses):
             response = self.client.post("/api/search")
 
@@ -71,6 +75,8 @@ class TestSearchEndpoint:
 
     def test_search_returns_query_used(self):
         with patch("src.web.searcher.search", return_value=[]), \
+             patch("src.web.greenhouse_searcher.search", return_value=[]), \
+             patch("src.web.ashby_searcher.search", return_value=[]), \
              patch("src.web.searcher.build_query", return_value="Software Engineer"):
             response = self.client.post("/api/search")
 

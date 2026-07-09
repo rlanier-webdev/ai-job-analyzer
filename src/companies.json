@@ -1,0 +1,14 @@
+{
+  "greenhouse": [
+    "stripe", "airbnb", "robinhood", "coinbase", "figma", "asana",
+    "pinterest", "reddit", "discord", "cloudflare", "gitlab", "elastic",
+    "mongodb", "affirm", "instacart", "lyft", "twitch", "roblox",
+    "datadog", "databricks", "brex", "gusto", "webflow", "peloton",
+    "squarespace", "duolingo"
+  ],
+  "ashby": [
+    "linear", "notion", "ramp", "openai", "supabase", "posthog",
+    "replit", "substack", "cursor", "runway", "watershed", "modal",
+    "temporal", "zapier"
+  ]
+}

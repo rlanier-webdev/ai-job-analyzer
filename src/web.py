@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
@@ -24,7 +25,7 @@ from .analyzer import JobAnalyzer
 from .database import init_db, save_analysis, list_analysis, get_analysis
 from .parser import JobParser, JobPosting
 from .profile import Profile, load_profile, ProfileManager, save_profile
-from .searcher import JobSearcher
+from .searcher import JobSearcher, GreenhouseSearcher, AshbySearcher
 
 # Load .env at the very start
 load_dotenv()
@@ -82,6 +83,12 @@ parser = JobParser()
 analyzer = JobAnalyzer()
 profile_manager = ProfileManager()
 searcher = JobSearcher()
+greenhouse_searcher = GreenhouseSearcher()
+ashby_searcher = AshbySearcher()
+
+_companies_path = Path(__file__).parent / "companies.json"
+with _companies_path.open() as f:
+    _ats_companies = json.load(f)
 
 class AnalyzeMode(str, Enum):
     url = "url"
@@ -177,7 +184,7 @@ async def analyze_job(
 @app.post("/api/search")
 @limiter.limit("10/minute")
 async def search_jobs(request: Request):
-    """Search Remotive for jobs matching the loaded profile; auto-analyze top 5."""
+    """Search Remotive plus curated Greenhouse/Ashby company boards for jobs matching the loaded profile; auto-analyze the most relevant matches."""
     current_profile = global_data.get("profile")
     if not current_profile:
         raise HTTPException(status_code=400, detail="Please upload or create a profile first.")
@@ -204,8 +211,33 @@ async def search_jobs(request: Request):
         return result, analysis
 
     try:
-        results = searcher.search(current_profile, limit=6)
         query_used = searcher.build_query(current_profile)
+        loop = asyncio.get_running_loop()
+
+        fetch_tasks = [loop.run_in_executor(_executor, searcher.search, current_profile, 6)]
+        fetch_tasks += [
+            loop.run_in_executor(_executor, greenhouse_searcher.search, slug)
+            for slug in _ats_companies.get("greenhouse", [])
+        ]
+        fetch_tasks += [
+            loop.run_in_executor(_executor, ashby_searcher.search, slug)
+            for slug in _ats_companies.get("ashby", [])
+        ]
+        fetched = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+
+        all_results = []
+        for outcome in fetched:
+            if isinstance(outcome, list):
+                all_results.extend(outcome)
+            else:
+                logger.warning("Job source fetch failed: %s", outcome)
+
+        query_words = {w for w in query_used.lower().split() if w}
+        relevant = [
+            r for r in all_results
+            if query_words & set(r.title.lower().split())
+        ]
+        results = relevant[:10]
 
         pairs = await asyncio.gather(*[_analyze_one(r) for r in results])
         jobs = [

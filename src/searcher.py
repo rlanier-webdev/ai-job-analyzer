@@ -18,7 +18,7 @@ class SearchResult(BaseModel):
 class JobSearcher:
     REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
 
-    USA_LOCATION_TERMS = {"usa", "us", "united states", "america", "worldwide", "anywhere", ""}
+    USA_LOCATION_TERMS = {"usa", "us", "united states", "america", "worldwide", "anywhere"}
 
     def search(self, profile: Profile, limit: int = 20) -> list[SearchResult]:
         query = self.build_query(profile)
@@ -39,11 +39,13 @@ class JobSearcher:
             "associate", "entry", "mid", "level", "i", "ii", "iii", "iv",
             "manager", "director", "head", "chief", "vp",
         }
-        words = [w for w in title.lower().split() if w not in stopwords]
+        words = [w for w in title.split() if w.lower() not in stopwords]
         return " ".join(words[:3]) if words else title
 
     def _is_usa_eligible(self, location: str) -> bool:
         loc = location.lower().strip()
+        if not loc:
+            return True
         return any(term in loc for term in self.USA_LOCATION_TERMS)
 
     def _to_result(self, job: dict) -> SearchResult:
@@ -58,4 +60,66 @@ class JobSearcher:
             url=job.get("url", ""),
             description_snippet=snippet,
             tags=job.get("tags", []),
+        )
+
+
+class GreenhouseSearcher:
+    """Fetches open jobs directly from a company's public Greenhouse job board."""
+
+    BASE_URL = "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
+
+    def search(self, company_slug: str) -> list[SearchResult]:
+        try:
+            response = requests.get(
+                self.BASE_URL.format(slug=company_slug),
+                params={"content": "true"},
+                timeout=10,
+            )
+            response.raise_for_status()
+        except requests.RequestException:
+            return []
+        jobs = response.json().get("jobs", [])
+        return [self._to_result(j, company_slug) for j in jobs]
+
+    def _to_result(self, job: dict, company_slug: str) -> SearchResult:
+        raw_description = job.get("content", "")
+        snippet = BeautifulSoup(raw_description, "html.parser").get_text()[:500].strip()
+        return SearchResult(
+            title=job.get("title", ""),
+            company=company_slug,
+            location=(job.get("location") or {}).get("name", "Remote"),
+            salary="",
+            remote_policy="remote",
+            url=job.get("absolute_url", ""),
+            description_snippet=snippet,
+            tags=[],
+        )
+
+
+class AshbySearcher:
+    """Fetches open jobs directly from a company's public Ashby job board."""
+
+    BASE_URL = "https://api.ashbyhq.com/posting-api/job-board/{slug}"
+
+    def search(self, company_slug: str) -> list[SearchResult]:
+        try:
+            response = requests.get(self.BASE_URL.format(slug=company_slug), timeout=10)
+            response.raise_for_status()
+        except requests.RequestException:
+            return []
+        jobs = response.json().get("jobs", [])
+        return [self._to_result(j, company_slug) for j in jobs]
+
+    def _to_result(self, job: dict, company_slug: str) -> SearchResult:
+        raw_description = job.get("descriptionHtml", "")
+        snippet = BeautifulSoup(raw_description, "html.parser").get_text()[:500].strip()
+        return SearchResult(
+            title=job.get("title", ""),
+            company=company_slug,
+            location=job.get("location", "Remote"),
+            salary="",
+            remote_policy="remote",
+            url=job.get("jobUrl", ""),
+            description_snippet=snippet,
+            tags=[],
         )
